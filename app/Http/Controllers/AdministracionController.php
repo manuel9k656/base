@@ -57,6 +57,16 @@ class AdministracionController extends Controller
                 $hasActions = true;
             }
 
+            // Botón Permisos
+            if (Auth::user()->can('asignar-roles')) {
+                $dropdownItems .= '<li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onClick="abrirModalPermisosUsuario(' . $user->id . ', \'' . e($user->name) . '\')">
+                                        <i class="ti ti-key me-2"></i> Asignar permisos
+                                    </a>
+                                </li>';
+                $hasActions = true;
+            }
+
             // Botón Cambiar Password
             if (Auth::user()->can('editar-usuarios')) {
                 $dropdownItems .= '<li>
@@ -223,6 +233,48 @@ class AdministracionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al asignar roles: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Modal de permisos del usuario
+    public function PermisosUsuarioModal(Request $request)
+    {
+        $userId = $request->input('id');
+        $user = User::with('permissions', 'roles.permissions')->findOrFail($userId);
+        $permissions = Permission::all()->groupBy(function($permission) {
+            // Agrupar por la segunda parte del nombre (ej: ver-usuarios -> usuarios)
+            $parts = explode('-', $permission->name);
+            return count($parts) > 1 ? $parts[1] : 'otros';
+        });
+
+        // Permisos directos del usuario (no heredados de roles)
+        $userDirectPermissions = $user->permissions->pluck('name')->toArray();
+
+        // Permisos heredados de roles
+        $rolePermissions = $user->roles->flatMap->permissions->pluck('name')->unique()->toArray();
+
+        return view('administracion.modals.permisos_usuario', compact('user', 'permissions', 'userDirectPermissions', 'rolePermissions'));
+    }
+
+    // Asignar permisos al usuario
+    public function asignarPermisos(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $permissions = $request->input('permissions', []);
+
+        try {
+            // syncPermissions reemplaza TODOS los permisos directos del usuario
+            $user->syncPermissions($permissions);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos actualizados correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar permisos: ' . $e->getMessage()
             ], 500);
         }
     }

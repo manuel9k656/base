@@ -383,3 +383,65 @@ function no_privileges() {
         timer: 3000
     });
 }
+
+// ==================== GESTIÓN DE PERMISOS DE USUARIOS ====================
+
+// Modal de permisos del usuario
+function abrirModalPermisosUsuario(userId, userName) {
+    $.ajax({
+        url: '/administracion/usuarios/permisos/modal',
+        method: 'POST',
+        data: { id: userId },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            $('#tituloPermisosUsuarios').text('Permisos de ' + userName);
+            $('#PermisosUsuarioModalContent').html(response);
+            $('#PermisosUsuarioModal').modal('show');
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar los permisos'
+            });
+        }
+    });
+}
+
+// Guardar permisos del usuario
+function guardarPermisosUsuario(userId) {
+    const permisosSeleccionados = [];
+    $('input[name="permissions[]"]:checked:not(:disabled)').each(function () {
+        permisosSeleccionados.push($(this).val());
+    });
+
+    $.ajax({
+        url: '/administracion/usuarios/' + userId + '/permisos',
+        method: 'POST',
+        data: { permissions: permisosSeleccionados },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message,
+                    timer: 2000
+                });
+                $('#PermisosUsuarioModal').modal('hide');
+                $('#UsuariosTable').DataTable().ajax.reload();
+            }
+        },
+        error: function (xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: xhr.responseJSON?.message || 'Error al asignar permisos'
+            });
+        }
+    });
+}

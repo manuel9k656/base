@@ -21,8 +21,9 @@
                                         class="form-check-input"
                                         type="checkbox"
                                         name="roles[]"
-                                        value="{{ $role->id }}"
+                                        value="{{ $role->name }}"
                                         id="role_{{ $role->id }}"
+                                        data-role-id="{{ $role->id }}"
                                         {{ in_array($role->id, $userRoles) ? 'checked' : '' }}
                                     >
                                     <label class="form-check-label w-100" for="role_{{ $role->id }}">

@@ -55,6 +55,10 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
         Route::middleware('can:asignar-roles')->group(function () {
             Route::post('/usuarios/roles/modal', [AdministracionController::class, 'RolesUsuarioModal'])->name('usuarios.roles.modal');
             Route::post('/usuarios/{id}/roles', [AdministracionController::class, 'asignarRoles'])->name('usuarios.roles.asignar');
+
+            // Permisos individuales de usuario
+            Route::post('/usuarios/permisos/modal', [AdministracionController::class, 'PermisosUsuarioModal'])->name('usuarios.permisos.modal');
+            Route::post('/usuarios/{id}/permisos', [AdministracionController::class, 'asignarPermisos'])->name('usuarios.permisos.asignar');
         });
 
         // === ROLES Y PERMISOS ===
