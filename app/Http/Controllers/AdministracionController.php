@@ -200,7 +200,7 @@ class AdministracionController extends Controller
     {
         $userId = $request->input('id');
         $user = User::with('roles')->findOrFail($userId);
-        $roles = Role::all();
+        $roles = Role::with('permissions')->get();
         $userRoles = $user->roles->pluck('id')->toArray();
 
         return view('administracion.modals.roles_usuario', compact('user', 'roles', 'userRoles'));
