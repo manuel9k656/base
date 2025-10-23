@@ -287,7 +287,7 @@ class AdministracionController extends Controller
 
      public function roles()
     {
-        $roles = Role::with(['permissions', 'users'])->get();
+        $roles = Role::All();
         return view('administracion.roles', compact('roles'));
     }
 
