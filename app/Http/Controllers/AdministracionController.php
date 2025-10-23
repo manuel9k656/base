@@ -142,14 +142,22 @@ class AdministracionController extends Controller
         $roles = Role::all();
 
         if ($userId) {
-            $user = User::with('roles')->findOrFail($userId);
+            $user = User::with('roles', 'permissions')->findOrFail($userId);
             $titulo = 'Editar Usuario';
+
+            // Obtener permisos directos del usuario
+            $userDirectPermissions = $user->permissions;
+
+            // Obtener permisos heredados de roles
+            $rolePermissions = $user->roles->flatMap->permissions->unique('id');
         } else {
             $user = null;
+            $userDirectPermissions = collect();
+            $rolePermissions = collect();
             $titulo = 'Nuevo Usuario';
         }
 
-        return view('administracion.modals.usuario_form', compact('user', 'roles', 'titulo'));
+        return view('administracion.modals.usuario_form', compact('user', 'roles', 'titulo', 'userDirectPermissions', 'rolePermissions'));
     }
 
     // Crear usuario
