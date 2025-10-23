@@ -62,14 +62,20 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
             Route::get('/roles', [AdministracionController::class, 'roles'])->name('roles');
             Route::post('/roles/modal', [AdministracionController::class, 'nuevoRolModal'])->name('roles.modal');
             Route::post('/roles/usuarios/modal', [AdministracionController::class, 'usuariosRolModal'])->name('roles.usuarios.modal');
+
+            // Permisos
+            Route::post('/permisos_datatable', [AdministracionController::class, 'permisos_datatable'])->name('permisos_datatable');
+            Route::post('/permisos/modal', [AdministracionController::class, 'nuevoPermisoModal'])->name('permisos.modal');
         });
 
         Route::middleware('can:crear-roles')->group(function () {
             Route::post('/roles/crear', [AdministracionController::class, 'crearRol'])->name('roles.crear');
+            Route::post('/permisos/crear', [AdministracionController::class, 'crearPermiso'])->name('permisos.crear');
         });
 
         Route::middleware('can:eliminar-roles')->group(function () {
             Route::delete('/roles/{id}', [AdministracionController::class, 'eliminarRol'])->name('roles.eliminar');
+            Route::delete('/permisos/{id}', [AdministracionController::class, 'eliminarPermiso'])->name('permisos.eliminar');
         });
     });
 });
