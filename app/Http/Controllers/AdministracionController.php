@@ -390,4 +390,176 @@ class AdministracionController extends Controller
 
         return view('administracion.modals.usuarios_rol', compact('rol'));
     }
+
+    // ==================== GESTIÓN DE PERMISOS ====================
+
+    // DataTable de permisos
+    public function permisos_datatable(Request $request)
+    {
+        $data = [];
+        $permissions = Permission::with('roles')->get();
+
+        foreach ($permissions as $permission) {
+            $dropdownItems = '';
+            $hasActions = false;
+
+            // Botón Ver
+            if (Auth::user()->can('ver-roles')) {
+                $dropdownItems .= '<li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onClick="verPermiso(' . $permission->id . ')">
+                                        <i class="ti ti-eye me-2"></i> Ver permiso
+                                    </a>
+                                </li>';
+                $hasActions = true;
+            }
+
+            // Botón Editar
+            if (Auth::user()->can('editar-roles')) {
+                $dropdownItems .= '<li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onClick="editarPermiso(' . $permission->id . ')">
+                                        <i class="ti ti-pencil me-2"></i> Editar permiso
+                                    </a>
+                                </li>';
+                $hasActions = true;
+            }
+
+            // Separador antes de eliminar
+            if (Auth::user()->can('eliminar-roles') && $hasActions) {
+                $dropdownItems .= '<li><hr class="dropdown-divider"></li>';
+            }
+
+            // Botón Eliminar
+            if (Auth::user()->can('eliminar-roles')) {
+                $dropdownItems .= '<li>
+                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onClick="eliminarPermiso(' . $permission->id . ')">
+                                        <i class="ti ti-trash me-2"></i> Eliminar permiso
+                                    </a>
+                                </li>';
+                $hasActions = true;
+            }
+
+            // Generar el dropdown completo
+            if ($hasActions) {
+                $actionButtons = '
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-dots-vertical"></i> Acciones
+                        </button>
+                        <ul class="dropdown-menu">
+                            ' . $dropdownItems . '
+                        </ul>
+                    </div>';
+            } else {
+                $actionButtons = '<span class="badge bg-secondary">Sin permisos</span>';
+            }
+
+            // Roles que tienen este permiso
+            $rolesHtml = '';
+            foreach ($permission->roles as $role) {
+                $rolesHtml .= '<span class="badge bg-success me-1">' . $role->name . '</span>';
+            }
+            if (empty($rolesHtml)) {
+                $rolesHtml = '<span class="badge bg-secondary">Sin roles asignados</span>';
+            }
+
+            $data[] = [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'guard_name' => $permission->guard_name,
+                'roles' => $rolesHtml,
+                'roles_count' => $permission->roles->count(),
+                'created_at' => $permission->created_at ? $permission->created_at->format('d/m/Y H:i') : '',
+                'action' => $actionButtons
+            ];
+        }
+
+        return response()->json(['data' => $data]);
+    }
+
+    // Modal para nuevo permiso
+    public function nuevoPermisoModal(Request $request)
+    {
+        $permisoId = $request->input('id');
+
+        if ($permisoId) {
+            $permiso = Permission::with('roles')->findOrFail($permisoId);
+            $titulo = 'Editar Permiso';
+        } else {
+            $permiso = null;
+            $titulo = 'Nuevo Permiso';
+        }
+
+        return view('administracion.modals.permiso_form', compact('permiso', 'titulo'));
+    }
+
+    // Crear o actualizar permiso
+    public function crearPermiso(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:permissions,name,' . $request->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            if ($request->id) {
+                // Actualizar
+                $permiso = Permission::findOrFail($request->id);
+                $permiso->name = $request->name;
+                $permiso->save();
+                $mensaje = 'Permiso actualizado correctamente';
+            } else {
+                // Crear
+                $permiso = Permission::create([
+                    'name' => $request->name,
+                    'guard_name' => 'web'
+                ]);
+                $mensaje = 'Permiso creado correctamente';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'permiso' => $permiso
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar el permiso: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Eliminar permiso
+    public function eliminarPermiso($id)
+    {
+        try {
+            $permiso = Permission::findOrFail($id);
+
+            // Verificar si el permiso está siendo usado por roles
+            if ($permiso->roles->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar el permiso porque está asignado a ' . $permiso->roles->count() . ' rol(es)'
+                ], 403);
+            }
+
+            $permiso->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permiso eliminado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el permiso: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
