@@ -15,28 +15,56 @@
 
         <div class="col-md-12 mb-3">
             <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-            <input type="email" 
-                   class="form-control" 
-                   id="email" 
-                   name="email" 
-                   value="{{ $user->email ?? '' }}" 
+            <input type="email"
+                   class="form-control"
+                   id="email"
+                   name="email"
+                   value="{{ $user->email ?? '' }}"
                    required>
         </div>
 
+        @if(!$user)
+        {{-- Contraseña requerida solo al crear --}}
         <div class="col-md-12 mb-3">
-            <label for="roles" class="form-label">Roles asignados</label>
-            <select id="roles" 
-                    name="roles[]" 
-                    class="form-select" 
-                    multiple>
-                @foreach($roles as $role)
-                    <option value="{{ $role->id }}"
-                        {{ isset($user) && $user->roles->contains($role->id) ? 'selected' : '' }}>
-                        {{ $role->name }}
-                    </option>
-                @endforeach
-            </select>
+            <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+            <input type="password"
+                   class="form-control"
+                   id="password"
+                   name="password"
+                   placeholder="Mínimo 8 caracteres"
+                   minlength="8"
+                   required>
+            <small class="text-muted">Mínimo 8 caracteres</small>
         </div>
+
+        <div class="col-md-12 mb-3">
+            <label for="password_confirmation" class="form-label">Confirmar contraseña <span class="text-danger">*</span></label>
+            <input type="password"
+                   class="form-control"
+                   id="password_confirmation"
+                   name="password_confirmation"
+                   placeholder="Repite la contraseña"
+                   minlength="8"
+                   required>
+        </div>
+        @else
+        {{-- Opcional al editar, usa el botón "Cambiar contraseña" separado --}}
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-warning">
+                <i class="ti ti-lock me-2"></i>
+                <small><strong>Contraseña:</strong> Para cambiar la contraseña usa el botón "Cambiar contraseña" en la tabla de usuarios.</small>
+            </div>
+        </div>
+        @endif
+
+        @if(!$user)
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+                <i class="ti ti-info-circle me-2"></i>
+                <small><strong>Nota:</strong> Podrás asignar roles al usuario después de crearlo usando el botón "Asignar roles" en la tabla de usuarios.</small>
+            </div>
+        </div>
+        @endif
         @if($user)
         <div class="col-md-12 mb-3">
             <div class="card bg-light">
