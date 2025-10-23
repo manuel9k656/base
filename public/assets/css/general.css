@@ -1,0 +1,146 @@
+
+
+/* Mejoras para modales */
+.modal-header.bg-dark {
+    background-color: #343a40 !important;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Mejoras para badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Mejoras para cards */
+.card {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card-header.bg-light {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.075);
+}
+
+/* Mejoras para DataTables */
+.dataTables_wrapper .dt-buttons {
+    margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dt-buttons .btn {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Filtros de DataTable */
+#UsuariosTable thead tr.filter th input {
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-title-head {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .breadcrumb {
+        margin-top: 0.5rem;
+    }
+}
+/* ******************** */
+/* Variables animables (uno por anillo) */
+@property --a1 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --a2 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Contenedor al que le agregas la clase */
+.loader_ring {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Imagen central, sin girar */
+.loader_ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(160px, 30%);
+  height: min(160px, 30%);
+  /* background: url('/assets/images/loader.webp') center/contain no-repeat; */
+  z-index: 3;               /* arriba de los anillos */
+  pointer-events: none;
+  transform: translateZ(0); /* evita jitter */
+}
+
+/* Ambos anillos en un solo pseudo-elemento, cada uno como una capa */
+.loader_ring::before {
+  --ring-size: min(340px, 40%); /* diámetro exterior */
+  --ring-width: 6px;            /* grosor del anillo */
+
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0%;
+
+  /* 1ª capa = ANILLO AMARILLO (pinta mitad arriba y derecha)
+     2ª capa = ANILLO ROJO (pinta mitad abajo e izquierda) */
+  background:
+    conic-gradient(from var(--a1),
+      #ffda00 0 90deg,      /* 1/4 */
+      transparent 90deg 180deg,
+      #ffda00 180deg 270deg,
+      transparent 270deg 360deg
+    ),
+    conic-gradient(from var(--a2),
+      transparent 0 90deg,
+      #ff3b3b 90deg 180deg,
+      transparent 180deg 270deg,
+      #ff3b3b 270deg 360deg
+    );
+
+  /* Convertimos los discos en ANILLOS con máscara (mismo grosor para ambos) */
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(50% - var(--ring-width)),
+    #000 calc(50% - var(--ring-width)),
+    #000 calc(50% + var(--ring-width)),
+    transparent calc(50% + var(--ring-width))
+  );
+          mask: radial-gradient(
+    farthest-side,
+    transparent calc(50% - var(--ring-width)),
+    #000 calc(50% - var(--ring-width)),
+    #000 calc(50% + var(--ring-width)),
+    transparent calc(50% + var(--ring-width))
+  );
+
+  /* Animaciones independientes por variable */
+  animation:
+    spinA1 2.2s linear infinite,
+    spinA2 3.5s linear infinite reverse;
+}
+
+/* Cada animación modifica su ángulo (no rotamos el elemento, rotamos el gradiente) */
+@keyframes spinA1 { to { --a1: 360deg; } }
+@keyframes spinA2 { to { --a2: 360deg; } }
+
+/* Si atenúas contenido del contenedor mientras carga */
+.loader_ring > * { opacity: .25; transition: opacity .2s; }
